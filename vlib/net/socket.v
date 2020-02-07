@@ -70,6 +70,9 @@ fn C.send() int
 fn C.recv() int
 
 
+fn C.recvfrom() int
+
+
 fn C.read() int
 
 
@@ -260,6 +263,15 @@ pub fn (s Socket) recv(bufsize int) (byteptr,int) {
 	buf := malloc(bufsize)
 	res := C.recv(s.sockfd, buf, bufsize, 0)
 	return buf,res
+}
+
+// receive string data from socket and return sender information
+pub fn (s Socket) recv_from(bufsize int) (byteptr, IpAddr, int) {
+	buf := malloc(bufsize)
+	addr := C.sockaddr_in{}
+	size := 16 // sizeof(C.sockaddr_in)
+	res := C.recvfrom(s.sockfd, buf, bufsize, 0, &addr, &size)
+	return buf, new_ip4_addr_from_c(addr.sin_addr.s_addr, addr.sin_port), res
 }
 
 // TODO: remove cread/2 and crecv/2 when the Go net interface is done
