@@ -67,6 +67,9 @@ fn C.connect() int
 fn C.send() int
 
 
+fn C.sendto() int
+
+
 fn C.recv() int
 
 
@@ -258,6 +261,21 @@ pub fn (s Socket) send_string(sdata string) ?int {
 	return s.send(sdata.str, sdata.len)
 }
 
+// send data to socket with a given target address
+pub fn (s Socket) send_to(buf byteptr, len int, to IpAddr) ?int {
+	mut addr := C.sockaddr_in{
+	}
+	addr.sin_family = s.family
+	addr.sin_port = C.htons(to.port)
+	addr.sin_addr.s_addr = to.ip.int()
+	size := 16 // sizeof(C.sockaddr_in)
+	sbytes := C.sendto(s.sockfd, buf, len, 0, &addr, size)
+	if sbytes < 0 {
+		return error('net.sendto: failed with $sbytes')
+	}
+	return len
+}
+
 // receive string data from socket
 pub fn (s Socket) recv(bufsize int) (byteptr,int) {
 	buf := malloc(bufsize)
@@ -268,7 +286,8 @@ pub fn (s Socket) recv(bufsize int) (byteptr,int) {
 // receive string data from socket and return sender information
 pub fn (s Socket) recv_from(bufsize int) (byteptr, IpAddr, int) {
 	buf := malloc(bufsize)
-	addr := C.sockaddr_in{}
+	addr := C.sockaddr_in{
+	}
 	size := 16 // sizeof(C.sockaddr_in)
 	res := C.recvfrom(s.sockfd, buf, bufsize, 0, &addr, &size)
 	return buf, new_ip4_addr_from_c(addr.sin_addr.s_addr, addr.sin_port), res

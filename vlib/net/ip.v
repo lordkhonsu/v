@@ -50,6 +50,13 @@ fn iphex(n u16) string {
 	return tos(hex, count)
 }
 
+fn (i Ip) int() int {
+	if i.octets.len != Ip4Len {
+		return 0
+	}
+	return int(i.octets[0]) | (int(i.octets[1])<<8) | (int(i.octets[2])<<16) | (int(i.octets[3])<<24)
+}
+
 // TODO: consider using an optional here
 pub fn (i Ip) to4() Ip {
 	if i.octets.len == Ip4Len {
